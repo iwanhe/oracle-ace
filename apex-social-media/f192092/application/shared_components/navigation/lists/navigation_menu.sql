@@ -1,0 +1,39 @@
+prompt --application/shared_components/navigation/lists/navigation_menu
+begin
+--   Manifest
+--     LIST: Navigation Menu
+--   Manifest End
+wwv_flow_imp.component_begin (
+ p_version_yyyy_mm_dd=>'2026.03.30'
+,p_release=>'26.1.0'
+,p_default_workspace_id=>146726770692635976661
+,p_default_application_id=>192092
+,p_default_id_offset=>8155984660337852939
+,p_default_owner=>'WKSP_KCSI'
+);
+wwv_flow_imp_shared.create_list(
+ p_id=>wwv_flow_imp.id(9830389904355018153)
+,p_name=>'Navigation Menu'
+,p_static_id=>'navigation-menu'
+,p_version_scn=>'SH256:k9lcfp73ptqEc5IaDxrmjI7DMrlKEVKjuO3b5G1Adrc'
+,p_created_on=>wwv_flow_imp.dz('20260519054611Z')
+,p_updated_on=>wwv_flow_imp.dz('20260519054611Z')
+,p_created_by=>'ANKITABERI14@GMAIL.COM'
+,p_updated_by=>'ANKITABERI14@GMAIL.COM'
+);
+wwv_flow_imp_shared.create_list_item(
+ p_id=>wwv_flow_imp.id(9830401716547018173)
+,p_list_item_display_sequence=>10
+,p_list_item_link_text=>'Timeline'
+,p_static_id=>'timeline'
+,p_list_item_link_target=>'f?p=&APP_ID.:1:&APP_SESSION.::&DEBUG.:::'
+,p_list_item_icon=>'fa-home'
+,p_list_item_current_type=>'TARGET_PAGE'
+,p_created_on=>wwv_flow_imp.dz('20260519054611Z')
+,p_updated_on=>wwv_flow_imp.dz('20260519054611Z')
+,p_created_by=>'ANKITABERI14@GMAIL.COM'
+,p_updated_by=>'ANKITABERI14@GMAIL.COM'
+);
+wwv_flow_imp.component_end;
+end;
+/
