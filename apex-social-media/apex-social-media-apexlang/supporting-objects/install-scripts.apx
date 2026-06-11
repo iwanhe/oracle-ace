@@ -1,0 +1,34 @@
+installScript "Data Model" (
+    execution {
+        sequence: 10
+    }
+    script {
+        contentFile: data-model.sql
+    }
+
+    databaseObject (
+        owner: #OWNER#
+        type: table
+        name: SM_POSTS
+    )
+
+    databaseObject (
+        owner: #OWNER#
+        type: table
+        name: SM_REACTIONS
+    )
+
+    databaseObject (
+        owner: #OWNER#
+        type: trigger
+        name: SM_POSTS_BIU
+    )
+
+    databaseObject (
+        owner: #OWNER#
+        type: trigger
+        name: SM_REACTIONS_BIU
+    )
+
+)
+

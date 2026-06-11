@@ -1,0 +1,18 @@
+breadcrumb breadcrumb (
+    name: Breadcrumb
+
+    entry timeline (
+        name: Timeline
+        pageNumber: 1
+        execution {
+            sequence: 10
+        }
+        link {
+            target: {
+                page: 1
+            }
+        }
+    )
+
+)
+

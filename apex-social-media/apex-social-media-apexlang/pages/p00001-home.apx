@@ -1,0 +1,689 @@
+page 1 (
+    name: Timeline
+    alias: HOME
+    title: APEX Social Media
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigationMenu {
+        overrideUserInterfaceLevel: true
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    javaScript {
+        executeWhenPageLoads:
+            ```javascript-browser
+            apex.actions.add([{
+                  name: "like",
+                  action: (event, element, args) => {
+                     apex.items.P1_ACTION_ID.value = args.id;
+                     apex.event.trigger(document, 'action-like');
+                  }
+               }, {
+                  name: "delete",
+                  action: (event, element, args) => {
+                     apex.items.P1_ACTION_ID.value = args.id;
+                     apex.event.trigger(document, 'action-delete');
+                  }
+               }, {
+                  name: "open-map",
+                  action: () => {
+                     apex.event.trigger(document, 'action-open-map');
+                  }
+               }]);
+            ```
+    }
+    css {
+        inline:
+            ```css
+            .user-has-liked {
+                color: red;
+            }
+            
+            @media (max-width: 640px) {
+                .new-post-button {
+                    position: fixed;
+                    bottom: 24px;
+                    right: 24px;
+                    z-index: 1000;
+                }
+            }
+            ```
+    }
+    security {
+        pageAccessProtection: argumentsMustHaveChecksum
+        formAutoComplete: false
+    }
+
+    region post (
+        name: Post
+        title: Post
+        type: form
+        source {
+            location: localDatabase
+            tableName: SM_POSTS
+        }
+        layout {
+            sequence: 20
+            slot: dialogsDrawersAndPopups
+        }
+        appearance {
+            template: @/inline-dialog
+            templateOptions: [
+                #DEFAULT#
+                js-dialog-autoheight
+                js-dialog-nosize
+                js-headingLevel-1
+            ]
+        }
+    )
+
+    region post-and-like-locations (
+        name: Post and Like Locations
+        type: map
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select distinct lat, lon, created_by, apex_util.get_since(created) as since from
+                  (
+                  select lat, lon, created_by, created from SM_POSTS
+                  union
+                  select lat, lon, created_by, created from SM_REACTIONS
+                  )
+                ```
+        }
+        layout {
+            sequence: 10
+            slot: dialogsDrawersAndPopups
+        }
+        appearance {
+            template: @/inline-dialog
+            templateOptions: [
+                #DEFAULT#
+                js-dialog-size600x400
+            ]
+        }
+        advanced {
+            htmlDomId: map
+        }
+        map {
+            height: 300
+        }
+        controls {
+            options: [
+                mousewheelZoom
+                rectangleZoom
+                scaleBar
+                distanceTool
+            ]
+        }
+        attributes {
+            messagesPosition: below
+        }
+
+        layer locations (
+            name: Locations
+            label {
+                label: Locations
+            }
+            layout {
+                sequence: 10
+            }
+            source {
+                location: regionSource
+            }
+            columnMapping {
+                geometryColumnDataType: longitudeLatitude
+                longitudeColumn: LON
+                latitudeColumn: LAT
+            }
+            tooltip {
+                advancedFormatting: true
+                htmlExpression: &CREATED_BY. @ &SINCE.
+            }
+            infoWindow {
+                advancedFormatting: true
+                htmlExpression: <strong>&NAME.</strong><br><img src="#APEX_FILES#sample_data/employees/&AVATAR_IMAGE." alt="Avatar of &NAME." title="Avatar of &NAME." width="100">
+            }
+        )
+
+    )
+
+    region timeline (
+        name: Timeline
+        type: cards
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select
+                 p.id,
+                 p.created_by AS user_name,
+                 p.post_comment AS comment_text,
+                 p.file_blob,
+                 p.file_mime,
+                
+                 apex_util.get_since(p.created) post_date,
+                
+                 (
+                     select count(*) from SM_REACTIONS smr
+                     where smr.post_id=p.id
+                 ) as REACTIONS,
+                
+                 (
+                     select 'user-has-liked' from SM_REACTIONS smr
+                     where smr.post_id=p.id and created_by=:APP_USER
+                 ) USER_REACTION_CSS
+                
+                 from SM_POSTS p
+                
+                 order by p.created desc
+                ```
+        }
+        layout {
+            sequence: 10
+            slot: body
+        }
+        appearance {
+            template: @/cards-container
+            templateOptions: [
+                #DEFAULT#
+                t-CardsRegion--hideHeader js-addHiddenHeadingRoleDesc
+            ]
+            cssClasses: t-Chat
+        }
+        advanced {
+            htmlDomId: timeline
+        }
+        card {
+            primaryKeyColumn1: ID
+        }
+        title {
+            column: USER_NAME
+        }
+        subtitle {
+            column: POST_DATE
+        }
+        body {
+            column: COMMENT_TEXT
+        }
+        iconAndBadge {
+            iconSource: initials
+            iconColumn: USER_NAME
+        }
+        media {
+            source: blobColumn
+            blobColumn: FILE_BLOB
+            position: first
+            appearance: widescreen
+            sizing: cover
+            cssClasses: selectDisable
+            imageDescription: &COMMENT_TEXT.
+        }
+        blobAttributes {
+            mimeTypeColumn: FILE_MIME
+        }
+
+        action action (
+            label: &REACTIONS.
+            layout {
+                sequence: 10
+            }
+            behavior {
+                type: redirectUrl
+                targetUrl: #action$like?id=&ID.
+            }
+            appearance {
+                displayType: textWithIcon
+                icon: "fa-heart &USER_REACTION_CSS. "
+                cssClasses: js-heart-button
+            }
+        )
+
+        action action_1 (
+            label: Delete
+            layout {
+                position: secondary
+                sequence: 20
+            }
+            behavior {
+                type: redirectUrl
+                targetUrl: #action$delete?id=&ID.
+            }
+            appearance {
+                displayType: icon
+                icon: fa-trash-o
+            }
+            serverSideCondition {
+                type: expression
+                plsqlExpression: trim(:user_name)=trim(:APP_USER)
+            }
+        )
+
+    )
+
+    pageItem P1_ACTION_ID (
+        type: hidden
+        settings {
+            valueProtected: false
+        }
+        layout {
+            sequence: 10
+            region: @timeline
+            slot: regionBody
+        }
+    )
+
+    pageItem P1_FILE_BLOB (
+        type: fileUpload
+        label {
+            label: Photo
+            alignment: left
+        }
+        display {
+            displayAs: blockDropzone
+            dropzoneTitle: Share a photo..
+        }
+        storage {
+            mimeTypeColumn: FILE_MIME
+            filenameColumn: FILE_NAME
+            fileTypes: image/*
+            maxFileSize: 10000
+        }
+        layout {
+            sequence: 10
+            region: @post
+            slot: regionBody
+            alignment: left
+            labelColumnSpan: 0
+        }
+        appearance {
+            template: @/hidden
+            templateOptions: [
+                #DEFAULT#
+                t-Form-fieldContainer--stretchInputs
+            ]
+            cssClasses: file-upload
+            icon: fa-camera-retro
+            width: 30
+        }
+        source {
+            formRegion: @post
+            column: FILE_BLOB
+            dataType: blob
+        }
+    )
+
+    pageItem P1_ID (
+        type: hidden
+        layout {
+            sequence: 10
+            region: @post
+            slot: regionBody
+        }
+        source {
+            formRegion: @post
+            column: ID
+            dataType: number
+            queryOnly: true
+            primaryKey: true
+        }
+        security {
+            sessionStateProtection: checksumRequiredSessionLevel
+        }
+    )
+
+    pageItem P1_LAT (
+        type: hidden
+        settings {
+            valueProtected: false
+        }
+        layout {
+            sequence: 30
+            region: @post
+            slot: regionBody
+        }
+        source {
+            formRegion: @post
+            column: LAT
+            dataType: number
+        }
+    )
+
+    pageItem P1_LON (
+        type: hidden
+        settings {
+            valueProtected: false
+        }
+        layout {
+            sequence: 40
+            region: @post
+            slot: regionBody
+        }
+        source {
+            formRegion: @post
+            column: LON
+            dataType: number
+        }
+    )
+
+    pageItem P1_POST_COMMENT (
+        type: textField
+        label {
+            label: Post
+            alignment: left
+        }
+        layout {
+            sequence: 20
+            region: @post
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+            width: 30
+        }
+        validation {
+            maxLength: 4000
+        }
+        source {
+            formRegion: @post
+            column: POST_COMMENT
+            dataType: varchar2
+        }
+    )
+
+    button add-post (
+        buttonName: ADD_POST
+        label: Add Post
+        layout {
+            sequence: 10
+            slot: afterLogo
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            hot: true
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            cssClasses: new-post-button
+            icon: fa-plus
+        }
+        behavior {
+            action: triggerAction
+        }
+
+        triggerAction open-post-dialog (
+            name: Open Post Dialog
+            action: openRegion
+            affectedElements {
+                selectionType: region
+                region: @post
+            }
+            execution {
+                sequence: 10
+            }
+        )
+
+    )
+
+    button save (
+        buttonName: Save
+        label: Save
+        layout {
+            sequence: 50
+            region: @post
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text
+            hot: true
+            templateOptions: [
+                #DEFAULT#
+                t-Button--large
+                t-Button--stretch
+            ]
+            cssClasses: post-button
+        }
+        behavior {
+            action: triggerAction
+            databaseAction: insert
+        }
+
+        triggerAction submit-post (
+            name: Submit post
+            action: submitPage
+            settings {
+                requestButtonName: Save
+            }
+            execution {
+                sequence: 10
+            }
+            clientSideCondition {
+                type: jsExpression
+                javaScriptExpression:
+                    ```javascript-browser
+                    apex.item('P1_FILE_BLOB').value.length>0 ||
+                    apex.item('P1_POST_COMMENT').value.length>0
+                    ```
+            }
+        )
+
+    )
+
+    dynamicAction action-delete (
+        name: action-delete
+        execution {
+            sequence: 20
+        }
+        when {
+            event: custom
+            customEvent: action-delete
+            selectionType: jsExpression
+            javaScriptExpression: document
+        }
+
+        action delete-confirm-dialog (
+            name: DELETE – Confirm dialog
+            action: confirm
+            settings {
+                title: Are you Sure?
+                message: You are about to delete this post. Are you sure?
+            }
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+
+        action delete-do-database-work (
+            name: DELETE – do database work
+            action: executeServerSideCode
+            settings {
+                plsqlCode:
+                    ```plsql
+                    delete from SM_REACTIONS where POST_ID = :P1_ACTION_ID and created_by=:APP_USER;
+                    delete from SM_POSTS where id=:P1_ACTION_ID and created_by=:APP_USER;
+                    ```
+                itemsToSubmit: P1_ACTION_ID
+            }
+            execution {
+                sequence: 20
+                fireOnInit: false
+            }
+        )
+
+        action delete-remove-post-in-ui (
+            name: DELETE – remove post in UI
+            action: executeJsCode
+            settings {
+                jsCode: "$('[data-id='+apex.items.P1_ACTION_ID.value+']').remove();"
+            }
+            execution {
+                sequence: 30
+                fireOnInit: false
+            }
+        )
+
+    )
+
+    dynamicAction action-like (
+        name: action-like
+        execution {
+            sequence: 10
+        }
+        when {
+            event: custom
+            customEvent: action-like
+            selectionType: jsExpression
+            javaScriptExpression: document
+        }
+
+        action like-do-database-work (
+            name: LIKE -- do database work
+            action: executeServerSideCode
+            settings {
+                plsqlCode:
+                    ```plsql
+                    begin
+                        -- try to store this posts' reaction from this user
+                        insert into SM_REACTIONS (post_id, reaction, lat, lon)
+                            values (:P1_ACTION_ID, 'LIKED', :P1_LAT, :P1_LON);
+                        exception when dup_val_on_index then
+                            -- remove it as it already existed
+                            delete from SM_REACTIONS where
+                                post_id=:P1_ACTION_ID and created_by=:APP_USER;
+                        end;
+                    ```
+                itemsToSubmit: [
+                    P1_ACTION_ID
+                    P1_LAT
+                    P1_LON
+                ]
+            }
+            execution {
+                sequence: 20
+                fireOnInit: false
+            }
+        )
+
+        action like-update-ui-adjust-count-heart-color (
+            name: LIKE - update UI (adjust count + heart color)
+            action: executeJsCode
+            settings {
+                jsCode:
+                    ```javascript-browser
+                    const button = $('[data-id="'+ apex.items.P1_ACTION_ID.value +'"] .js-heart-button'); // get the card
+                    
+                        const label = button.find('.a-CardView-buttonLabel'); // get the likes count section
+                    
+                        const icon = button.find('.a-CardView-buttonIcon'); // gets the element if its liked already
+                    
+                        let likeCount = label.text(); // get the like count
+                    
+                        if (icon.hasClass('user-has-liked')) {
+                            // user has liked this already, and they are unliking it now -- decrement
+                            label.text(--likeCount);
+                    
+                        } else {
+                            // user is liking the post -- increment
+                            label.text(++likeCount);
+                        }
+                    
+                        icon.toggleClass('user-has-liked'); // either add this class or remove it
+                    ```
+            }
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+
+    )
+
+    dynamicAction action-open-map (
+        name: action-open-map
+        execution {
+            sequence: 30
+        }
+        when {
+            event: custom
+            customEvent: action-open-map
+            selectionType: jsExpression
+            javaScriptExpression: document
+        }
+
+        action native-open-region (
+            action: openRegion
+            affectedElements {
+                selectionType: region
+                region: @post-and-like-locations
+            }
+            execution {
+                sequence: 10
+                fireOnInit: false
+            }
+        )
+
+    )
+
+    dynamicAction get-device-location (
+        name: Get Device Location
+        execution {
+            sequence: 40
+        }
+        when {
+            event: ready
+        }
+
+        action native-get-current-position (
+            action: getCurrentPosition
+            settings {
+                returnType: latitudeAndLongitude
+                latitudeItem: P1_LAT
+                longitudeItem: P1_LON
+            }
+            execution {
+                sequence: 10
+            }
+        )
+
+    )
+
+    process initialize-form-timeline (
+        name: Initialize form Timeline
+        type: formInitialization
+        formRegion: @post
+        execution {
+            sequence: 10
+            point: beforeHeader
+        }
+        advanced {
+            executionMappingIdentifier: 151670442395158127819
+        }
+    )
+
+    process insert-post (
+        name: Insert Post
+        type: formAutoRowProcessing
+        formRegion: @post
+        execution {
+            sequence: 10
+        }
+        successMessage {
+            successMessage: Posted!
+        }
+        advanced {
+            executionMappingIdentifier: 151670444014548127836
+        }
+    )
+
+)
+
