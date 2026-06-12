@@ -1,7 +1,7 @@
 # APEX Social Media — Oracle APEX Application
 
 > **Oracle ACE Apprentice Program** — Product Usage Milestone Contribution  
-> LiveLabs Workshop ID: 3620 | Completed: [isi tanggal penyelesaian]
+> LiveLabs Workshop ID: 3620 | Completed: [12 Jun 2026]
 
 ---
 
@@ -235,8 +235,8 @@ Working through this Oracle LiveLabs workshop deepened my understanding of sever
 
 ## About
 
-[Isi nama kamu]  
-Oracle ACE Apprentice — [Tahun]  
+[Iwan Herdian]  
+Oracle ACE Apprentice — [2026]  
 [LinkedIn profile atau Oracle Community profile — opsional]
 
 ---
