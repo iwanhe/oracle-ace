@@ -22,8 +22,8 @@ The application demonstrates how Oracle APEX's low-code platform enables develop
 | **APEX Version** | 26.1 |
 | **Oracle DB Workspace** | WKSP_KCSI |
 | **Type** | Single-Page Application + PWA |
-| **Built By** | [Isi nama kamu] |
-| **Completed** | [Isi tanggal] |
+| **Built By** | [Iwan Herdian] |
+| **Completed** | [12 Jun 2026] |
 
 ---
 
