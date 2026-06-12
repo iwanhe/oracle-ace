@@ -1,7 +1,7 @@
 # APEX Social Media — Oracle APEX Application
 
 > **Oracle ACE Apprentice Program** — Product Usage Milestone Contribution  
-> LiveLabs Workshop ID: 3620 | Completed: [12 Jun 2026]
+> LiveLabs Workshop ID: 3620 | Completed: 12 Jun 2026
 
 ---
 
@@ -22,8 +22,8 @@ The application demonstrates how Oracle APEX's low-code platform enables develop
 | **APEX Version** | 26.1 |
 | **Oracle DB Workspace** | WKSP_KCSI |
 | **Type** | Single-Page Application + PWA |
-| **Built By** | [Iwan Herdian] |
-| **Completed** | [12 Jun 2026] |
+| **Built By** | Iwan Herdian |
+| **Completed** | 12 Jun 2026 |
 
 ---
 
@@ -236,8 +236,8 @@ Working through this Oracle LiveLabs workshop deepened my understanding of sever
 ## About
 
 [Iwan Herdian]  
-Oracle ACE Apprentice — [2026]  
-[LinkedIn profile atau Oracle Community profile — opsional]
+Oracle ACE Apprentice — 2026  
+[LinkedIn profile](https://www.linkedin.com/in/iwanherdian/)
 
 ---
 
